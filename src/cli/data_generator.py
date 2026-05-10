@@ -1,15 +1,25 @@
-import faker
+import random
+
+from src.core.registries import *
+from src.core.urser import random_person
+
 
 def generate_data():
-    pass
+    for index, loca, country in enumerate(LOCALE_TO_COUNTRY.items()):
+        user = random_person(index, loca)
+        print(user)
 
 
-# fake = faker("ru_RU")
-def generate_meal(locale: str):
-    pass
-def generate_person(locale: str):
-    fake = faker.Faker(locale)
+def generate_meal(locale: str) -> dict:
+    if random.random() > 0.8:
+        product, val = random.choice(list(COUNTRIES_FOODS[locale].items()))
+    else:
+        product, val = random.choice(list(FOODS.items()))
+
     return {
-        "name": fake.name(),
-        "city": fake.city(),
+        "product": product,
+        "calories_per_serving": val[0],
+        "protein_g": val[1],
+        "fat_g": val[2],
+        "carbs_g": val[3]
     }

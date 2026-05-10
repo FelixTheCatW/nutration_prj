@@ -3,29 +3,14 @@ from faker import Faker
 import random
 from datetime import datetime, timedelta
 import math
+from ..core.registries import *
 
 fake = Faker('ru_RU')
 
-# ------------------------ 1. БАЗА ПРОДУКТОВ ПО СТРАНАМ (без изменений) ------------------------
-# (те же 10 словарей, что и ранее - опускаю для краткости, но в реальном коде они здесь)
-# ... RUSSIAN_FOODS, ITALIAN_FOODS, JAPANESE_FOODS, MEXICAN_FOODS, INDIAN_FOODS,
-# ... FRENCH_FOODS, CHINESE_FOODS, AMERICAN_FOODS, GREEK_FOODS, THAI_FOODS
-# ... COUNTRIES_FOODS, CITIES - всё как выше
+# ------------------------ СПРАВОЧНИКИ ------------------------
 
-# ------------------------ 2. ДОПОЛНИТЕЛЬНЫЕ СПРАВОЧНИКИ ------------------------
-GOALS = ['похудение', 'набор_мышц', 'поддержание']
-MEAL_TYPES = ['завтрак', 'обед', 'ужин', 'перекус']
-ACTIVITY_LEVELS = ['сидячий', 'лёгкий', 'умеренный', 'активный', 'очень активный']
-MEAL_SOURCES = ['домашнее', 'ресторан', 'на вынос', 'столовая', 'быстрое']
 
 # Коэффициенты активности для расчета TDEE (Total Daily Energy Expenditure)
-ACTIVITY_FACTORS = {
-    'sedentary': 1.2,      # мало или нет упражнений
-    'light': 1.375,        # легкие упражнения 1-3 дня/нед
-    'moderate': 1.55,      # средние 3-5 дней/нед
-    'active': 1.725,       # активные 6-7 дней/нед
-    'very_active': 1.9     # тяжелая физработа или тренировки 2 раза/день
-}
 
 # ------------------------ 3. ФУНКЦИИ ДЛЯ РАСЧЕТА НОРМ ------------------------
 def calculate_bmr(weight_kg, height_cm, age, gender):
@@ -44,7 +29,7 @@ def get_target_calories(tdee, goal):
         return tdee - 500  # дефицит 500 ккал/день
     elif goal == 'muscle_gain':
         return tdee + 300  # профицит 300 ккал/день
-    else:  # maintenance
+    else:
         return tdee
 
 def get_target_macros(target_cal, goal):
@@ -58,7 +43,7 @@ def get_target_macros(target_cal, goal):
         protein_pct, fat_pct, carb_pct = 0.30, 0.30, 0.40
     elif goal == 'muscle_gain':
         protein_pct, fat_pct, carb_pct = 0.35, 0.25, 0.40
-    else:  # maintenance
+    else:
         protein_pct, fat_pct, carb_pct = 0.25, 0.30, 0.45
 
     protein_cal = target_cal * protein_pct
@@ -189,9 +174,9 @@ def generate_meal_record(meal_id, user, meal_date):
         season = 'autumn'
 
     # Флаг праздника (упрощенно: Новый год, 8 марта, майские)
-    holiday_flag = 1 if (meal_date.month == 1 and meal_date.day == 1) or
+    holiday_flag = 1 if ((meal_date.month == 1 and meal_date.day == 1) or
                          (meal_date.month == 3 and meal_date.day == 8) or
-                         (meal_date.month == 5 and meal_date.day in [1, 9]) else 0
+                         (meal_date.month == 5 and meal_date.day in [1, 9])) else 0
 
     # Время приготовления (зависит от типа блюда и источника)
     if meal_source == 'home_cooked':
