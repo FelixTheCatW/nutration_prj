@@ -4,31 +4,22 @@ from src.core.registries import *
 from src.core.Person import random_person
 
 
+def generate_persons(quantity: int) -> list[Person]:
+    return [random_person(i, LOCALES[i % len(LOCALES)]) for i in range(quantity)]
+
+
+def generate_day_nutrition(person: Person):
+    return [generate_meal_ext(person.loca, meal_t, person.tdee, person.goal) for meal_t in MEAL_TYPES]
+
+
 def generate_data():
     persons = [random_person(index, loca) for index, loca in enumerate(LOCALE_MAP.values())]
     for person in persons:
-        meals = [generate_meal_2(person.loca, meal_t, person.tdee, person.goal) for meal_t in MEAL_TYPES]
+        meals = [generate_meal_ext(person.loca, meal_t, person.tdee, person.goal) for meal_t in MEAL_TYPES]
         yield person, meals
 
 
-def generate_meal(locale: str) -> dict:
-    if random.random() > 0.8:
-        locale_country = LOCALE_TO_COUNTRY[locale]
-        product, val = random.choice(list(COUNTRIES_FOODS[locale_country].items()))
-    else:
-        product, val = random.choice(list(FOODS.items()))
-
-    return {
-        "product": product,
-        "servings": random.randint(1, 3),
-        "calories": val[0],
-        "protein_g": val[1],
-        "fat_g": val[2],
-        "carbs_g": val[3]
-    }
-
-
-def generate_meal_2(locale: str, meal_t: str, target_calories: float, user_goal: str) -> dict:
+def generate_meal_ext(locale: str, meal_t: str, target_calories: float, user_goal: str) -> dict:
     # выбор национальной или глобальной кухни
     is_local = random.random() < 0.75
 
@@ -50,7 +41,7 @@ def generate_meal_2(locale: str, meal_t: str, target_calories: float, user_goal:
         name, (kcal, prot, fat, carbs) = dish
         servings = get_servings(kcal, user_goal)
         kcal_total = kcal * servings
-        if kcal_total <= remaining_kcal * 1.3:  # допустимый перебор
+        if kcal_total <= remaining_kcal * 1.3:  # допустимый ночной дожор
             chosen_dishes.append({
                 "product": name,
                 "servings": servings,
@@ -69,21 +60,18 @@ def generate_time(meal_t: str) -> str:
     match meal_t:
         case "завтрак":
             hour = random.randint(7, 10)
-            minute = random.choice([0, 15, 30, 45])
         case "обед":
             hour = random.randint(12, 15)
-            minute = random.choice([0, 15, 30, 45])
         case "ужин":
             hour = random.randint(18, 21)
-            minute = random.choice([0, 15, 30, 45])
         case "перекус":
             # перекусы могут быть в разное время
-            hour = random.choice([10, 11, 16, 17])
-            minute = random.choice([0, 15, 30, 45])
+            hour = random.randint(21, 23)
+
         case _:
             hour = 12
             minute = 0
-    return f"{hour:02d}:{minute:02d}"
+    return f"{hour:02d}:{random.choice([0, 15, 30, 45]):02d}"
 
 
 def get_servings(calories_per_serving, goal):
@@ -96,3 +84,20 @@ def get_servings(calories_per_serving, goal):
     max_servings = 2 if calories_per_serving > 300 else 3
     servings = min(max_servings, base + random.uniform(-0.2, 0.3))
     return round(servings * 2) / 2  # кратно 0.5
+
+
+def generate_meal(locale: str) -> dict:
+    if random.random() > 0.8:
+        locale_country = LOCALE_TO_COUNTRY[locale]
+        product, val = random.choice(list(COUNTRIES_FOODS[locale_country].items()))
+    else:
+        product, val = random.choice(list(FOODS.items()))
+
+    return {
+        "product": product,
+        "servings": random.randint(1, 3),
+        "calories": val[0],
+        "protein_g": val[1],
+        "fat_g": val[2],
+        "carbs_g": val[3]
+    }

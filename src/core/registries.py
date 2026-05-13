@@ -410,6 +410,7 @@ LOCALE_MAP = {
 }
 
 LOCALE_TO_COUNTRY = {v: k for k, v in LOCALE_MAP.items()}
+LOCALES = list(LOCALE_MAP.values())
 
 # Правила для определения типа приёма пищи по названию блюда
 MEAL_TYPE_RULES = {
