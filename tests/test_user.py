@@ -1,4 +1,4 @@
-from src.cli.data_generator import User, generate_meal, generate_data, random_person
+from src.core.Person import Person, random_person
 
 class TestUser:
     """Verify User creation and field correctness"""
