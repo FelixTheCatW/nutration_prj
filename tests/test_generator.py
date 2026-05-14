@@ -1,13 +1,10 @@
+import csv
 from datetime import date, timedelta
 from pprint import pprint
 
-from src.cli.data_generator import generate_data, generate_persons, generate_day_nutrition
+from data_generator import generate_persons, generate_day_nutrition
 from src.core.Person import Person
-from src.core.registries import COUNTRIES_MEALS_BY_TYPE, GLOBAL_MEALS_BY_TYPE, LOCALES
-
-import csv
-from datetime import date, timedelta
-
+from src.core.registries import COUNTRIES_MEALS_BY_TYPE, GLOBAL_MEALS_BY_TYPE, LOCALES, REPORT_FIELDS
 
 class TestGenerator:
 
@@ -52,15 +49,8 @@ def save_detailed_nutrition_to_csv(persons: list[Person], start_date: date, end_
         writer = csv.writer(csvfile)
 
         # Заголовки: все поля Person (включая вычисляемые) + поля приёма пищи + поля блюда
-        headers = [
-            'date',
-            'user_id', 'name', 'activity_level', 'height_cm', 'age', 'gender',
-            'weight_kg', 'goal', 'city', 'loca',
-            'bmr', 'target_cal_per_day', 'target_protein_g', 'tdee',
-            'meal_type', 'eaten_at',
-            'dish_name', 'servings', 'dish_calories', 'dish_protein_g', 'dish_fat_g', 'dish_carbs_g'
-        ]
-        writer.writerow(headers)
+
+        writer.writerow(REPORT_FIELDS)
 
         current_date = start_date
         while current_date <= end_date:

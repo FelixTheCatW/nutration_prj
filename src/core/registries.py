@@ -460,10 +460,8 @@ def classify_meal_type(dish: str) -> str:
 
     return 'обед'
 
-
-# Создаём результирующий словарь
 COUNTRIES_MEALS_BY_TYPE = {}
-GLOBAL_MEALS_BY_TYPE = { k: [] for k in MEAL_TYPE_RULES.keys() }
+GLOBAL_MEALS_BY_TYPE = {k: [] for k in MEAL_TYPE_RULES.keys()}
 
 for country, foods_dict in COUNTRIES_FOODS.items():
     # Инициализируем структуру для этой страны
@@ -477,3 +475,24 @@ for country, foods_dict in COUNTRIES_FOODS.items():
 for g_dish_name, g_nutrition in FOODS.items():
     meal_type = classify_meal_type(g_dish_name)
     GLOBAL_MEALS_BY_TYPE[meal_type].append((g_dish_name, g_nutrition))
+
+REPORT_FIELDS = [
+    'date',
+    'user_id', 'name', 'activity_level', 'height_cm', 'age', 'gender',
+    'weight_kg', 'goal', 'city', 'loca',
+    'bmr', 'target_cal_per_day', 'target_protein_g', 'tdee',
+    'meal_type', 'eaten_at',
+    'dish_name', 'servings', 'dish_calories', 'dish_protein_g', 'dish_fat_g', 'dish_carbs_g'
+]
+
+REPORT_CAPTIONS = {
+    'date': 'Дата',
+    'user_id': "ИД", 'name': "Имя", 'activity_level': "Активность", 'height_cm': "Рост (см)", 'age': "Возраст",
+    'gender': "Пол",
+    'weight_kg': "Вес (кг)", 'goal': "Цель", 'city': "Город", 'loca': "Язык",
+    'bmr': "БСМ", 'target_cal_per_day': "Целевая калорийность в день (г)", 'Целевой белок в день (г)': "",
+    'tdee': "Общий суточный расход энергии",
+    'meal_type': "Тип Тип пищи", 'eaten_at': "Время приёма",
+    'dish_name': "Продукт", 'servings': "Порции", 'dish_calories': "Калорийность", 'dish_protein_g': "Белки (г)",
+    'dish_fat_g': "Жиры (г)", 'dish_carbs_g': "Углеводы (г)"
+}
