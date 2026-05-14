@@ -4,11 +4,12 @@ from src.utils.text_utils import wrap_text
 
 colors_init: set = set()
 class ScreenWriter:
-    def __init__(self, stdscr):
+    def __init__(self, stdscr, x, y, width, height):
         self.stdscr = stdscr
-        self.height, self.width = stdscr.getmaxyx()
-        self.y = 0
-        self.x = 0
+        self.height = height
+        self.width = width
+        self.y = x
+        self.x = y
 
     def new_line(self):
         self.y += 1
@@ -46,4 +47,5 @@ class ScreenWriter:
         self.write(separator, 0, color)
         self.y += 1
         return True
+
 
