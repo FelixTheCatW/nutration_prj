@@ -12,6 +12,9 @@ def wrap_text(text: str, width: int) -> list:
     if not text:
         return [""]
 
+    if len(text) <= width:
+        return [text]
+
     words = text.split()
     if not words:
         return [""]
@@ -19,7 +22,7 @@ def wrap_text(text: str, width: int) -> list:
     lines = []
     current_line = []
     current_len = 0
-
+        
     for word in words:
         extra_space = 1 if current_line else 0
         if current_len + len(word) + extra_space <= width:

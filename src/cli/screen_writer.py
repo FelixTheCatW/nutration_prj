@@ -3,6 +3,8 @@ import curses
 from src.utils.text_utils import wrap_text
 
 colors_init: set = set()
+
+
 class ScreenWriter:
     def __init__(self, stdscr, x, y, width, height):
         self.stdscr = stdscr
@@ -14,32 +16,41 @@ class ScreenWriter:
     def new_line(self):
         self.y += 1
 
-    def write(self, text: str, indent: int = 0, color: int = 0):
+    def __write(self, text: str, y, x, color: int = 0):
         try:
-            if self.y >= self.height - 1:
+            if y >= self.height:
                 return False
 
             if not text or not text.strip():
                 return True
 
-            if len(text) > self.width - self.x - 1 - indent:
-                text = text[: self.width - 1 - indent]
+            if len(text) > self.width - x - 1:
+                text = text[: self.width - 1]
 
-            if color > 0 and color not in colors_init:                
-                curses.init_pair(color + 1, color, -1)
-                colors_init.add(color)
+            # if color > 0 and color not in colors_init:
+            #     curses.init_pair(color + 1, color, -1)
+            #     colors_init.add(color)
 
-            self.stdscr.addstr(self.y, self.x + indent, text, curses.color_pair(color))
-            self.y += 1
+            self.stdscr.addstr(y, x, text, curses.color_pair(color))
 
             return True
         except curses.error:
             return False
 
-    def write_wrapped(self, text, indent=0, color=0):
-        lines = wrap_text(text, self.width - indent - 2)
+    def write(self, text, color=0):
+        lines = wrap_text(text, self.width - 2)
         for line in lines:
-            self.write(line, indent, color)
+            self.__write(line, self.y, self.x, color)
+            self.y += 1
+
+        return True
+
+    def write_bottom(self, text, color=0):
+        lines = wrap_text(text, self.width - 2)
+        l_l = len(lines)        
+        for line in lines:
+            self.__write(line, self.height - l_l, self.x, color)
+            l_l -= 1
 
         return True
 
@@ -48,6 +59,56 @@ class ScreenWriter:
         self.write(separator, 0, color)
         self.y += 1
         return True
+
+
+def select_user_popup(stdscr, users_df):
+    """Показывает окно выбора пользователя и возвращает (user_id, name)."""
+    height, width = stdscr.getmaxyx()
+    win_height = min(len(users_df) + 4, height - 4)
+    win_width = min(60, width - 4)
+    start_y = (height - win_height) // 2
+    start_x = (width - win_width) // 2
+    win = curses.newwin(win_height, win_width, start_y, start_x)
+    win.keypad(True)
+    curses.curs_set(0)
+    win.bkgd(" ", curses.color_pair(171))
+    win.box()
+    win.addstr(0, 2, " Выберите пользователя ", curses.A_BOLD)
+
+    users = users_df[["user_id", "name"]].to_records(index=False)
+    current = 0
+    max_display = win_height - 3
+    start_idx = 0
+
+    while True:
+        win.clear()
+        win.box()
+        win.addstr(0, 2, " Выберите пользователя ", curses.A_BOLD)
+        visible = users[start_idx : start_idx + max_display]
+        for i, (uid, name) in enumerate(visible):
+            y = i + 2
+            if start_idx + i == current:
+                win.addstr(y, 2, f" {name} ", curses.A_REVERSE)
+            else:
+                win.addstr(y, 2, f" {name} ")
+        win.refresh()
+        key = win.getch()
+        if key == curses.KEY_UP:
+            if current > 0:
+                current -= 1
+                if current < start_idx:
+                    start_idx = current
+        elif key == curses.KEY_DOWN:
+            if current < len(users) - 1:
+                current += 1
+                if current >= start_idx + max_display:
+                    start_idx = current - max_display + 1
+        elif key == ord("\n") or key == curses.KEY_ENTER:
+            uid, name = users[current]
+            return uid, name
+        elif key == 27:  # ESC
+            return None, None
+    return None, None
 
 
 def init_colors(stdscr):

@@ -65,9 +65,6 @@ def random_person(user_id: int, locale: str) -> Person:
     return person
 
 
-# ========================
-# 3. РАСЧЁТНЫЕ ФУНКЦИИ
-# ========================
 def calculate_bmr(weight_kg, height_cm, age, gender):
     """Harris-Benedict (пересмотренный)"""
     if gender == 'мужской':
