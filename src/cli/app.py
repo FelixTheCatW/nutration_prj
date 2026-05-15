@@ -2,24 +2,24 @@ import curses
 import textwrap
 
 from cli.menu import MENU_ITEMS, MENU_DESC
-from cli.screen_writer import ScreenWriter
+from cli.screen_writer import ScreenWriter, init_colors
 
 TOP_LEFT_SCR: ScreenWriter
 TOP_RIGHT_SCR: ScreenWriter
 BODY_SCR: ScreenWriter
 
 def draw_screen(stdscr, items, descriptions, current_idx, height, width):
-    # stdscr.clear()
+    stdscr.clear()
     init_screens(stdscr)
 
     for i, item in enumerate(MENU_ITEMS):
         if i == current_idx:
-            TOP_LEFT_SCR.write(f"👉 {item}", 0, 0)
+            TOP_LEFT_SCR.write(f"👉{i+1:2}. {item}", 0, 140)
             TOP_RIGHT_SCR.write_wrapped(descriptions[current_idx])
         else:
-            TOP_LEFT_SCR.write(f"   {item}", 0, 0)
+            TOP_LEFT_SCR.write(f"  {i+1:2}. {item}", 0, 0)
 
-    stdscr.refresh()
+    # stdscr.refresh()
 
 
 def init_screens(stdscr):
@@ -29,29 +29,33 @@ def init_screens(stdscr):
 
     height, width = stdscr.getmaxyx()
     list_width = max(30, width // 3) + 5
-    desc_width = width - list_width - 2
-    header_height = 11
-    report_height = height - header_height - 2
+    desc_width = width - list_width
+    header_height = 12
+    report_height = height - 1
 
     global TOP_LEFT_SCR, TOP_RIGHT_SCR, BODY_SCR
     TOP_LEFT_SCR = ScreenWriter(stdscr, 0, 0, list_width, header_height)
     TOP_RIGHT_SCR = ScreenWriter(stdscr, list_width + 1, 0, desc_width, header_height)
-    BODY_SCR = ScreenWriter(stdscr, header_height + 1, 0, width, report_height)
+    BODY_SCR = ScreenWriter(stdscr, 0, header_height, width, report_height)
 
     # Заголовок
-    TOP_LEFT_SCR.write("Доступные отчеты".center(list_width), 0, 0)
-    TOP_RIGHT_SCR.write("Описание".center(desc_width),0, 0)
+    TOP_LEFT_SCR.write("Доступные отчеты".center(list_width), 0, 171)
+    TOP_RIGHT_SCR.write("Описание".center(desc_width),0, 171)
     # подвал
     help_msg = "↑/↓ - выбор | Enter - запуск | q: выход"
-    stdscr.addstr(height - 1, 0, help_msg, curses.color_pair(48))
+    stdscr.addstr(height - 1, 0, help_msg, curses.color_pair(171))
 
 def main_curses(stdscr):
     init_screens(stdscr)
     current_idx = 0
     height, width = stdscr.getmaxyx()
-
+    
+    init_colors(stdscr)
+    
+       
     while True:
         draw_screen(stdscr, MENU_ITEMS, MENU_DESC, current_idx, height, width)
+        stdscr.refresh()
         key = stdscr.getch()
         items_len = len(MENU_ITEMS)
         if key == ord('q') or key == ord('Q'):
@@ -63,8 +67,7 @@ def main_curses(stdscr):
         elif key == ord('\n') or key == curses.KEY_ENTER:
             BODY_SCR.write_wrapped("Отчет сгенерирован. Нажмите любую клавишу для возврата в меню.")
             stdscr.refresh()
-            # stdscr.getch()
-
+            key = stdscr.getch()
     curses.endwin()
 
 
