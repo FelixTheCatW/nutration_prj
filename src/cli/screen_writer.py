@@ -8,8 +8,8 @@ class ScreenWriter:
         self.stdscr = stdscr
         self.height = height
         self.width = width
-        self.y = x
-        self.x = y
+        self.y = y
+        self.x = x
 
     def new_line(self):
         self.y += 1
