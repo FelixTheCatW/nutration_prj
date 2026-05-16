@@ -1,6 +1,6 @@
 GOALS = {
     'weight_loss': 'похудение',
-    'muscle_gain': 'набор_мышц',
+    'muscle_gain': 'набор мышц',
     'maintenance': 'поддержание'
 }
 
@@ -486,13 +486,32 @@ REPORT_FIELDS = [
 ]
 
 REPORT_CAPTIONS = {
-    'date': 'Дата',
-    'user_id': "ИД", 'name': "Имя", 'activity_level': "Активность", 'height_cm': "Рост (см)", 'age': "Возраст",
-    'gender': "Пол",
-    'weight_kg': "Вес (кг)", 'goal': "Цель", 'city': "Город", 'loca': "Язык",
-    'bmr': "БСМ", 'target_cal_per_day': "Целевая калорийность в день (г)", 'Целевой белок в день (г)': "",
-    'tdee': "Общий суточный расход энергии",
-    'meal_type': "Тип Тип пищи", 'eaten_at': "Время приёма",
-    'dish_name': "Продукт", 'servings': "Порции", 'dish_calories': "Калорийность", 'dish_protein_g': "Белки (г)",
-    'dish_fat_g': "Жиры (г)", 'dish_carbs_g': "Углеводы (г)"
+    "date": "Дата",
+    "user_id": "ИД",
+    "name": "Имя",
+    "activity_level": "Активность",
+    "height_cm": "Рост (см)",
+    "age": "Возраст",
+    "gender": "Пол",
+    "weight_kg": "Вес (кг)",
+    "goal": "Цель",
+    "city": "Город",
+    "loca": "Язык",
+    "bmr": "БСМ",
+    "target_cal_per_day": "Целевая калорийность в день (г)",
+    "Целевой белок в день (г)": "",
+    "tdee": "Общий суточный расход энергии",
+    "meal_type": "Тип Тип пищи",
+    "eaten_at": "Время приёма",
+    "dish_name": "Продукт",
+    "servings": "Порции",
+    "dish_calories": "Калорийность",
+    "dish_protein_g": "Белки (г)",
+    "dish_fat_g": "Жиры (г)",
+    "dish_carbs_g": "Углеводы (г)",
+    "date_only": "Дата",
+    "total_cal": "Калории (ккал)",
+    "total_protein": "Белки (г)",
+    "total_fat": "Жиры (г)",
+    "total_carbs": "Углеводы (г)",
 }

@@ -2,8 +2,6 @@ import curses
 
 from src.utils.text_utils import wrap_text
 
-colors_init: set = set()
-
 
 class ScreenWriter:
     def __init__(self, stdscr, x, y, width, height):
@@ -27,21 +25,18 @@ class ScreenWriter:
             if len(text) > self.width - x - 1:
                 text = text[: self.width - 1]
 
-            # if color > 0 and color not in colors_init:
-            #     curses.init_pair(color + 1, color, -1)
-            #     colors_init.add(color)
-
             self.stdscr.addstr(y, x, text, curses.color_pair(color))
 
             return True
         except curses.error:
             return False
 
-    def write(self, text, color=0):
-        lines = wrap_text(text, self.width - 2)
+    def write(self, text: str | list[str], color: int = 0) -> bool:
+        lines = [text] if isinstance(text, str) else text        
         for line in lines:
-            self.__write(line, self.y, self.x, color)
-            self.y += 1
+            for w_line in wrap_text(line, self.width - 2):
+                self.__write(w_line, self.y, self.x, color)
+                self.y += 1
 
         return True
 
