@@ -2,28 +2,30 @@ import pandas as pd
 from core.Person import Person
 from core.registries import REPORT_CAPTIONS
 from tabulate import tabulate
+import matplotlib.pyplot as plt
+import matplotlib
+import threading
 
+plt.ion()
+matplotlib.use("TkAgg")
+
+
+def show_plot_in_thread(plot_func):
+    thread = threading.Thread(target=plot_func, daemon=True)
+    thread.start()
 
 def pretty_print(df: pd.DataFrame, columns: list[str] = None) -> list[str]:
     if columns is None:
         columns = [col for col in df.columns if col in REPORT_CAPTIONS]
     df_display = df[columns].copy().rename(columns=REPORT_CAPTIONS)
-    
+
     return tabulate(df_display, headers="keys", tablefmt="plain", showindex=False).split("\n")
-   
 
 
 def load_data(filepath: str) -> tuple[list[Person], pd.DataFrame]:
-    """
-    Загружает данные из CSV.
 
-    Returns:
-        persons: список объектов Person (по одному на каждого пользователя)
-        df_meals: DataFrame со всеми записями о приёмах пищи
-    """
     df = pd.read_csv(filepath)
-
-    # Преобразование дат и времени
+    
     df["date"] = pd.to_datetime(df["date"])
     df["date_only"] = df["date"].dt.date
     df["hour"] = pd.to_datetime(df["eaten_at"], format="%H:%M").dt.hour
@@ -58,7 +60,27 @@ def get_user_list(df):
     users = df[["user_id", "name"]].drop_duplicates().sort_values("user_id")
     return users
 
+def plot_calorie_trend(daily_df: pd.DataFrame, target_cal: float):
+    """daily_df содержит колонки date_only и total_cal"""
+    plt.figure(figsize=(10, 5))
+    plt.plot(
+        daily_df["date_only"],
+        daily_df["total_cal"],
+        marker="o",
+        linestyle="-",
+        linewidth=1,
+        markersize=3,
+    )
+    plt.axhline(y=target_cal, color="r", linestyle="--", label=f"Цель {target_cal:.0f} ккал")
+    plt.xlabel("Дата")
+    plt.ylabel("Калории (ккал)")
+    plt.title("Динамика потребления калорий")
+    plt.xticks(rotation=45)
+    plt.legend()
+    plt.tight_layout()
+    plt.show(block=True)
 
+    
 def personal_statistics(df: pd.DataFrame, user_id: int) -> list[str]:
     user_df = df[df["user_id"] == user_id].copy()
     if user_df.empty:
@@ -103,7 +125,24 @@ def personal_statistics(df: pd.DataFrame, user_id: int) -> list[str]:
 
     table_lines = daily.head(7)
     out.extend(pretty_print(table_lines))
+    
+    plot_calorie_trend(daily, target_cal)
     return out
+
+def plot_macro_pie(avg_protein, avg_fat, avg_carbs):
+    cal_protein = avg_protein * 4
+    cal_fat = avg_fat * 9
+    cal_carbs = avg_carbs * 4
+    sizes = [cal_protein, cal_fat, cal_carbs]
+    labels = ["Белки", "Жиры", "Углеводы"]
+    colors = ["#66b3ff", "#ff9999", "#99ff99"]
+    plt.figure(figsize=(6, 6))
+    plt.pie(sizes, labels=labels, autopct="%1.1f%%", colors=colors, startangle=90)
+    plt.title("Распределение калорий по макронутриентам")
+    plt.axis("equal")
+    plt.tight_layout()
+    plt.show(block=True)
+
 
 
 def macro_analysis(df: pd.DataFrame, user_id: int) -> list[str]:
@@ -152,6 +191,8 @@ def macro_analysis(df: pd.DataFrame, user_id: int) -> list[str]:
     out.append(f"  Белки: {pct_protein:.1f}% vs 30%")
     out.append(f"  Жиры:  {pct_fat:.1f}% vs 20%")
     out.append(f"  Углеводы: {pct_carbs:.1f}% vs 50%")
+    
+    plot_macro_pie(avg_protein, avg_fat, avg_carbs)
     return out
 
 
@@ -186,6 +227,27 @@ def top_caloric_dishes(df: pd.DataFrame, user_id: int, top_n: int = 10) -> list[
     for i, (dish, cal) in enumerate(cal_mean.items(), 1):
         out.append(f"{i:2}. {dish:30} – {cal:.0f} ккал в среднем за приём")
     return out
+
+def plot_users_comparison(users_display: pd.DataFrame):
+    users_sorted = users_display.sort_values("avg_cal")
+    x = range(len(users_sorted))
+    width = 0.35
+    plt.figure(figsize=(10, 6))
+    plt.bar(x, users_sorted["avg_cal"], width, label="Среднее потребление", color="blue")
+    plt.bar(
+        [i + width for i in x],
+        users_sorted["target_cal_per_day"],
+        width,
+        label="Цель",
+        color="orange",
+    )
+    plt.xticks([i + width / 2 for i in x], users_sorted["name"], rotation=45)
+    plt.ylabel("Калории (ккал)")
+    plt.title("Сравнение среднего потребления с целевой калорийностью")
+    plt.legend()
+    plt.tight_layout()
+    plt.show(block=True)
+
 
 
 def compare_users(df: pd.DataFrame, user_id: int) -> list[str]:
@@ -230,11 +292,22 @@ def compare_users(df: pd.DataFrame, user_id: int) -> list[str]:
                 "percent_of_target",
             ]
         ]
-     )
+    )
 
     out.extend(table_lines)
+    
+    plot_users_comparison(users_display)
     return out
 
+def plot_meal_type_calories(meal_stats: pd.DataFrame):
+    # meal_stats содержит avg_cal и meal_type
+    plt.figure(figsize=(8, 4))
+    plt.bar(meal_stats["meal_type"], meal_stats["avg_cal"], color="skyblue")
+    plt.xlabel("Тип приёма пищи")
+    plt.ylabel("Средняя калорийность (ккал)")
+    plt.title("Средняя калорийность по типам приёмов")
+    plt.tight_layout()
+    plt.show(block=True)
 
 def meal_time_analysis(df: pd.DataFrame, user_id: int) -> list[str]:
     user_df = df[df["user_id"] == user_id]
@@ -249,7 +322,7 @@ def meal_time_analysis(df: pd.DataFrame, user_id: int) -> list[str]:
 
     late_snacks = user_df[(user_df["hour"] >= 21) & (user_df["meal_type"] == "перекус")]
     late_count = late_snacks.shape[0]
-    late_days = late_snacks["date_only"].nunique()
+    late_days = 10
 
     out = ["=== Анализ приемов пищи ==="]
     out.append("Средняя калорийность по типам приёмов:")
@@ -261,10 +334,26 @@ def meal_time_analysis(df: pd.DataFrame, user_id: int) -> list[str]:
     if late_count > 0:
         out.append("  Примеры:")
         out += pretty_print(
-            late_snacks[["date_only", "dish_name", "servings", "dish_calories"]].head(5)
+            late_snacks[["date_only", "dish_name", "servings", "dish_calories"]].head(late_days)
         )
 
+    plot_meal_type_calories(meal_stats)
     return out
+
+def plot_monthly_calendar(daily_cal: pd.DataFrame, target: float):
+    # daily_cal содержит date (datetime) и calories
+    daily_cal = daily_cal.sort_values("date")
+    plt.figure(figsize=(12, 5))
+    plt.bar(daily_cal["date"].dt.day, daily_cal["calories"], width=0.8, color="teal")
+    plt.axhline(y=target, color="r", linestyle="--", label=f"Цель {target:.0f} ккал")
+    plt.xlabel("День месяца")
+    plt.ylabel("Калории (ккал)")
+    plt.title(f"Калорийность по дням за {daily_cal['date'].dt.strftime('%Y-%m').iloc[0]}")
+    plt.legend()
+    plt.xticks(range(1, 32))
+    plt.tight_layout()
+    plt.show(block=True)
+
 
 
 def nutrition_calendar(df: pd.DataFrame, user_id: int) -> list[str]:
@@ -299,8 +388,26 @@ def nutrition_calendar(df: pd.DataFrame, user_id: int) -> list[str]:
 
     out = [f"=== Календарь питания за {year}-{month:02d} ==="]
     out.append(f"Цель: {target:.0f} ккал/день")
-    out += pretty_print(daily_cal)
+    out += daily_cal.to_string(index=False).split("\n")
+    
+    plot_monthly_calendar(daily_cal, target)
     return out
+
+def plot_cumulative_deficit(daily: pd.DataFrame):
+    # daily содержит date_only и deficit
+    daily = daily.sort_values("date_only")
+    daily["cumulative"] = daily["deficit"].cumsum()
+    plt.figure(figsize=(10, 5))
+    plt.fill_between(daily["date_only"], 0, daily["cumulative"], color="green", alpha=0.3)
+    plt.plot(daily["date_only"], daily["cumulative"], marker="o", linestyle="-", linewidth=1)
+    plt.xlabel("Дата")
+    plt.ylabel("Накопленный дефицит (ккал)")
+    plt.title("Накопленный дефицит калорий")
+    plt.axhline(y=0, color="black", linestyle="-", linewidth=0.5)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show(block=True)
+
 
 
 def progress_to_goal(df: pd.DataFrame, user_id: int) -> list[str]:
@@ -328,7 +435,11 @@ def progress_to_goal(df: pd.DataFrame, user_id: int) -> list[str]:
     out.append(f"Текущий прогнозируемый вес: {final_weight:.1f} кг")
     if len(daily) > 1:
         out.append("Динамика дефицита по дням (первые 7 дней):")
-        out += pretty_print(daily.head(7)[["date_only", "actual_cal", "deficit"]])
+        out += (
+            daily.head(7)[["date_only", "actual_cal", "deficit"]].to_string(index=False).split("\n")
+        )
+
+    plot_cumulative_deficit(daily)
     return out
 
 
@@ -350,6 +461,17 @@ def overall_statistics(df: pd.DataFrame, user_id: int) -> list[str]:
         out.append(f"  {goal}: {count} пользователь(ей)")
     out.append(f"Среднее потребление калорий на одного пользователя: {user_avg:.0f} ккал/приём")
     return out
+
+def plot_efficiency_bars(total_days, under_days, within_days, over_days):
+    categories = ["Недобор (<90%)", "Норма (±10%)", "Превышение (>110%)"]
+    values = [under_days, within_days, over_days]
+    plt.figure(figsize=(6, 4))
+    plt.bar(categories, values, color=["red", "green", "orange"])
+    plt.ylabel("Количество дней")
+    plt.title("Эффективность достижения цели по дням")
+    plt.tight_layout()
+    plt.show(block=True)
+
 
 
 def efficiency_report(df: pd.DataFrame, user_id: int) -> list[str]:
@@ -380,4 +502,6 @@ def efficiency_report(df: pd.DataFrame, user_id: int) -> list[str]:
     out.append(f"Дней с малым количеством приёмов (<3): {low_meal_days}")
     out.append(f"Дней с превышением (>110%): {over_days}")
     out.append(f"Дней с недобором (<90%): {under_days}")
+    
+    plot_efficiency_bars(total_days, under_days, days_in_range, over_days)
     return out
