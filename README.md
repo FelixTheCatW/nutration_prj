@@ -97,12 +97,12 @@ python -m src.tg.bot
 pip install pytest pytest-cov ruff black mypy
 
 Запуск тестов:
-bash
+```bash
 
 pytest tests/
-
+```
 Проверка стиля:
-bash
+```bash
 
 ruff check .
 black --check .
